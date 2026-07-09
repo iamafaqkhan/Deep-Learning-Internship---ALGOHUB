@@ -88,7 +88,7 @@ def prediction_page():
 
             stroke_color="white",
 
-            background_color="black",
+            background_color="white",
 
             width=280,
 
