@@ -10,13 +10,31 @@ from PIL import Image, ImageOps
 
 
 # Load trained model
-def load_trained_model(model_path="model/mnist_cnn.keras"):
-    """
-    Load the trained CNN model.
-    """
+# def load_trained_model(model_path="model/mnist_cnn.keras"):
+#     """
+#     Load the trained CNN model.
+#     """
 
-    model = tf.keras.models.load_model(model_path)
-    return model
+#     model = tf.keras.models.load_model(model_path)
+#     return model
+
+from pathlib import Path
+import tensorflow as tf
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+MODEL_PATH = PROJECT_ROOT / "model" / "mnist_cnn.keras"
+
+
+def load_trained_model():
+    print(f"Looking for model at: {MODEL_PATH}")
+
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(
+            f"Model file not found:\n{MODEL_PATH}"
+        )
+
+    return tf.keras.models.load_model(MODEL_PATH)
 
 
 # Preprocess uploaded image
