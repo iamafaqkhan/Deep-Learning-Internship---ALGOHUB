@@ -1,0 +1,21 @@
+# Dataset
+data/raw/
+data/processed/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+logs/
+
+# Temporary files
+temp_image.png
+
+# VS Code
+.vscode/
