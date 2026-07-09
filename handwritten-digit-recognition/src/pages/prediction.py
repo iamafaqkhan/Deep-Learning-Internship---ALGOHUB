@@ -22,9 +22,22 @@ model = load_model()
 
 def show_prediction(image, caption):
 
+    # Convert RGBA -> RGB if needed
+    if image.mode == "RGBA":
+        image = image.convert("RGB")
+
     st.image(image, caption=caption, width=250)
 
     processed = preprocess_uploaded_image(image)
+
+    # Show what the CNN actually receives
+    # st.write("### Processed Image (28×28)")
+
+    # st.image(
+    #     processed[0, :, :, 0],
+    #     width=150,
+    #     clamp=True
+    # )
 
     digit, confidence, probabilities = predict_digit(
         model,
@@ -32,17 +45,19 @@ def show_prediction(image, caption):
     )
 
     st.success(f"Predicted Digit: {digit}")
-
     st.info(f"Confidence: {confidence * 100:.2f}%")
 
     fig, ax = plt.subplots(figsize=(8, 4))
 
-    ax.bar(range(10), probabilities)
+    colors = ["steelblue"] * 10
+    colors[digit] = "green"
+
+    ax.bar(range(10), probabilities, color=colors)
 
     ax.set_xticks(range(10))
     ax.set_xlabel("Digits")
     ax.set_ylabel("Probability")
-    ax.set_title("Prediction Probabilities")
+    ax.set_ylim(0, 1)
 
     st.pyplot(fig)
 
@@ -51,20 +66,24 @@ def prediction_page():
 
     st.title("Handwritten Digit Recognition")
 
-    tab1, tab2 = st.tabs(["Upload Image", "Draw Digit"])
+    option = st.radio(
+        "Choose Prediction Method",
+        ["Upload Image", "Draw Digit"],
+        horizontal=True
+    )
 
-    # -----------------------------
+    # ==========================================================
     # Upload Image
-    # -----------------------------
-    with tab1:
+    # ==========================================================
+
+    if option == "Upload Image":
 
         uploaded_file = st.file_uploader(
             "Upload a handwritten digit",
-            type=["png", "jpg", "jpeg"],
-            key="upload"
+            type=["png", "jpg", "jpeg"]
         )
 
-        if uploaded_file is not None:
+        if uploaded_file:
 
             image = Image.open(uploaded_file)
 
@@ -73,41 +92,53 @@ def prediction_page():
                 "Uploaded Image"
             )
 
-    # -----------------------------
+    # ==========================================================
     # Draw Digit
-    # -----------------------------
-    with tab2:
+    # ==========================================================
 
-        st.write("Draw a white digit on the black canvas.")
+    else:
 
-        canvas_result = st_canvas(
+        st.subheader("Draw a Digit")
 
-            fill_color="black",
-
-            stroke_width=18,
-
-            stroke_color="white",
-
-            background_color="white",
-
-            width=380,
-
-            height=380,
-
-            drawing_mode="freedraw",
-
-            key="canvas",
+        st.write(
+            "Draw a black digit on the white canvas and click Predict."
         )
 
-        if canvas_result.image_data is not None:
+        brush_size = st.slider(
+            "Brush Size",
+            5,
+            25,
+            10
+        )
 
-            image = Image.fromarray(
-                canvas_result.image_data.astype(np.uint8)
+        canvas_result = st_canvas(
+            stroke_width=brush_size,
+            stroke_color="black",
+            background_color="white",
+            width=380,
+            height=380,
+            drawing_mode="freedraw",
+            fill_color="rgba(255,255,255,0)",
+            update_streamlit=True,
+            key="digit_canvas"
+        )
+
+        if st.button("Predict Drawn Digit"):
+
+            if canvas_result is None or canvas_result.image_data is None:
+                st.warning("Please draw a digit first.")
+                return
+
+            image_array = canvas_result.image_data.astype(np.uint8)
+
+            # Check whether the canvas is effectively blank
+            if np.all(image_array[:, :, :3] == 255):
+                st.warning("Please draw a digit first.")
+                return
+
+            image = Image.fromarray(image_array).convert("RGB")
+
+            show_prediction(
+                image,
+                "Drawn Digit"
             )
-
-            if st.button("Predict Drawn Digit"):
-
-                show_prediction(
-                    image,
-                    "Drawn Digit"
-                )
