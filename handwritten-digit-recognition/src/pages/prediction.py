@@ -90,9 +90,9 @@ def prediction_page():
 
             background_color="white",
 
-            width=280,
+            width=380,
 
-            height=280,
+            height=380,
 
             drawing_mode="freedraw",
 
